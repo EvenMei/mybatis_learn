@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.meiyukai.dao.IUserDao">
+
+    <!--重大提示 #{ids} 中的ids 是属性中的 ids 属性中没有就会出问题
+    所有 要关注这几个问题
+     -->
+
+    <resultMap id="user_map" type="user">
+        <id property="ids" column="id"/>
+    </resultMap>
+
+    <parameterMap id="mmp"  type="User" >
+        <parameter property="ids" resultMap="user_map"/>
+    </parameterMap>
+
+    <sql id="select_all">
+          select * from user
+    </sql>
+
+
+
+    <select id="findAll" resultMap="user_map">
+            select * from User;
+    </select>
+
+
+
+    <insert id="saveUser" parameterMap="mmp"  useGeneratedKeys="true" keyProperty="ids">
+
+       <!-- <selectKey keyProperty="ids"  keyColumn="id" resultType="int" order="AFTER">
+            select last_insert_id();
+        </selectKey>-->
+        insert  into user values(
+        #{ids},
+        #{username},
+        #{birthday},
+        #{sex},
+        #{address}
+        )
+    </insert>
+
+    <!--更新用户-->
+    <update id="updateUser" parameterMap="mmp">
+        update user
+        <set>
+        <if test="username!=null and username!='' ">
+                username =#{username},
+        </if>
+        <if test="birthday!=null  ">
+                birthday = #{birthday},
+        </if>
+
+        <if test="sex!=null and sex!=''">
+                sex=#{sex},
+        </if>
+        <if test="address!=null and address!='' ">
+                address = #{address},
+        </if>
+
+        </set>
+
+        <where >
+            id = #{ids}
+        </where>
+
+    </update>
+
+    <select id="getUserById" parameterType="int" resultType="user">
+        select * from user where id = #{id2}
+    </select>
+
+    <delete id="deleteUserById" parameterType="int">
+        delete from user where id = #{id2}
+    </delete>
+
+    <!--求表中的总记录数-->
+        <select id="getCount"  resultType="int">
+            select count(1) from user;
+        </select>
+
+    <!--使用字符串拼接的时候必须使用 value 即${value}-->
+    <select id="findByUserName" parameterType="string" resultType="user">
+       <include refid="select_all"></include>  
+       where username like '%${value}%'
+    </select>
+
+    <select id="findByQueryVo" parameterType="queryvo" resultType="user">
+        select * from user where username like '%${name}%'
+    </select>
+
+    <select id="findUserInIds" parameterType="queryvo" resultType="user">
+        select * from user
+        <where>
+        <if test="ids!=null and ids.size()>0">
+            <foreach collection="ids" item="index" open="and id in (" close=")" separator=",">
+                #{index}
+            </foreach>
+        </if>
+
+        </where>
+
+
+    </select>
+
+
+</mapper>

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.meiyukai.dao.IAccountDao">
+
+<!--开启user 支持二级缓存-->
+    <cache/>
+
+
+    <!--查询所有-->
+    <select id="findAll" resultType="account">
+        select * from account;
+    </select>
+
+
+    <!--条件查询-->
+    <select id="findAccountById" parameterType="int" resultType="account" useCache="true" > <!--使用二级缓存-->
+        select * from account where id = #{id}
+    </select>
+
+
+    <!--根据用户的ID查询account-->
+    <select id="findAccountsByUserId" parameterType="int" resultType="account">
+        select * from account
+        where uid = #{uid}
+    </select>
+
+
+    <!--========####   方式一  ####=========-->
+    <resultMap id="account_user_map"  type="account">
+        <id property="id" column="aid"/>
+        <result property="name"  column="aname"/>
+        <result property="money"  column="money"/>
+        <result property="uid"  column="uid"/>
+
+        <association property="user" javaType="user">
+            <id property="id" column="uid"/>
+            <result property="name" column="uname"/>
+            <result property="password" column="password"/>
+            <result property="username" column="username"/>
+        </association>
+    </resultMap>
+
+    <select id="findAccountsAndUser" resultMap="account_user_map">
+        select a.id aid , a.name aname , a. money , a.uid ,
+                    u.id uid , u.name uname , u.username , u.password
+         from account a
+        left join user  u on (a.uid = u.id)
+    </select>
+
+
+    <!--========####   方式二 ####=========-->
+
+    <resultMap id="account_user_map_2"  type="account">
+        <id property="id" column="aid"/>
+        <result property="name"  column="aname"/>
+        <result property="money"  column="money"/>
+        <result property="uid"  column="uid"/>
+
+        <association property="user" javaType="user" select="com.meiyukai.dao.IUserDao.findUserById" column="uid" fetchType="eager" >
+        </association>
+    </resultMap>
+
+    <select id="findAccountsAndUser2" resultMap="account_user_map_2" useCache="true">
+        select * from account
+    </select>
+
+
+
+</mapper>

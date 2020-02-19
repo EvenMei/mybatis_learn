@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.meiyukai.dao.IUserDao">
+
+<!--开启user 支持二级缓存-->
+    <cache/>
+
+
+    <!--查询所有-->
+    <select id="findAll" resultType="user" >
+        select * from user;
+    </select>
+
+
+    <!--条件查询-->
+    <select id="findUserById" parameterType="int" resultType="user" useCache="true"> <!--使用二级缓存-->
+        select * from user where id = #{id}
+    </select>
+
+    <!--添加新的用户-->
+
+    <insert id="addUser" parameterType="user"  >  <!--useGeneratedKeys="true" keyProperty="id"-->
+        insert into user
+        values(null , #{name},  #{password} ,  #{username});
+
+    </insert>
+
+
+    <!--更新用户-->
+    <update id="updateUser" parameterType="user" >
+        update user
+
+
+                <set>
+                    <if test="name!=null and name!='' "  >
+                        name=#{name},
+                     </if>
+                    password = #{password},
+                    username=#{username},
+
+                </set>
+
+
+        <where>
+            id = #{id}
+        </where>
+
+    </update>
+
+
+    <!--删除用户-->
+    <delete id="deleteUserById" parameterType="int">
+
+         delete from user where id=#{id}
+
+    </delete>
+
+    <!--使用字符串拼接的时候必须使用 value 即${value}-->
+    <select id="findByUserName" parameterType="string" resultType="user">
+        select * from user where username like '%${value}%'
+    </select>
+
+    <!--=============================================多表操作==================================================-->
+
+    <!--======#####     方式一      ######=======-->
+
+    <resultMap id="user_account_map" type="user">
+
+        <id property="id" column="id1"/>  <!--取个别名 避免投影错误-->
+        <result property="name" column="uname"/>
+        <result property="password" column="password"/>
+        <result property="username" column="username"/>
+
+        <collection property="accounts"  ofType="account">
+            <id property="id" column="id2"/>
+            <result property="name" column="aname"/>
+            <result property="money" column="money"/>
+            <result property="uid" column="uid"/>
+        </collection>
+
+    </resultMap>
+
+
+    <select id="findAllUsersAndAccounts" resultMap="user_account_map">
+        select
+        u.id id1, u.name  uname , u.password , u.username,
+        a.id id2 , a.name  aname , a.money , a.uid
+        from user u
+        left join account a on(u.id = a.uid);
+    </select>
+
+
+    <!--=======####   方式二     ####=========-->
+
+    <resultMap id="user_account_map_2" type="user">
+
+        <id property="id" column="id"/>  <!--取个别名 避免投影错误-->
+        <result property="name" column="uname"/>
+        <result property="password" column="password"/>
+        <result property="username" column="username"/>
+
+        <collection property="accounts"  ofType="account" column="id" select="com.meiyukai.dao.IAccountDao.findAccountsByUserId" fetchType="lazy" >
+
+        </collection>
+
+    </resultMap>
+
+    <select id="findAllUsersAndAccounts2" resultMap="user_account_map_2" useCache="true">
+        select * from user;
+    </select>
+
+
+    <!--========####   方式一  ####=========-->
+    <resultMap id="user_role_map" type="user">
+        <id property="id" column="uid"/>
+        <result property="name" column="name"/>
+        <result property="password" column="password"/>
+        <result property="username" column="username"/>
+
+        <collection property="roles" ofType="role">
+            <id property="id" column="rid"/>
+            <result property="roleDesc" column="role_desc"/>
+        </collection>
+
+    </resultMap>
+
+    <select id="findAllUsersAndRoles" resultMap="user_role_map">
+        select u.id  uid, u.name ,  u.password , u.username , r.id  rid , r.role_desc
+        from user u
+        left join user_role  t on (u.id =t.user_id )
+        left join role r on(r.id = t.role_id);
+    </select>
+
+
+
+    <!--========####   方式二 ####=========-->
+
+    <resultMap id="user_role_map_2" type="user">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="password" column="password"/>
+        <result property="username" column="username"/>
+
+        <collection property="roles" ofType="role"  column="id" select="com.meiyukai.dao.IRoleDao.findRolesByUserId" fetchType="lazy">
+        </collection>
+
+    </resultMap>
+
+    <select id="findAllUsersAndRoles2" resultMap="user_role_map_2" useCache="true">
+        select * from user
+    </select>
+
+
+
+
+
+
+
+</mapper>
